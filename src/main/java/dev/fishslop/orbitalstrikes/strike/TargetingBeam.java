@@ -2,8 +2,10 @@ package dev.fishslop.orbitalstrikes.strike;
 
 import com.mojang.math.Vector3f;
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 
 /** A coloured beam from the sky down to the target, plus a marker ring on the ground. */
@@ -26,7 +28,7 @@ public final class TargetingBeam implements StrikeTask {
 	public boolean tick(ServerLevel level) {
 		if (this.age % 2 == 0) {
 			for (double dy = 0.0; dy < BEAM_HEIGHT; dy += 1.0) {
-				level.sendParticles(this.dust, this.target.x, this.target.y + dy, this.target.z, 1, 0.05, 0.25, 0.05, 0.0);
+				send(level, this.dust, this.target.x, this.target.y + dy, this.target.z, 0.05, 0.25, 0.05);
 			}
 
 			// The marker ring shrinks onto the target as the strike gets closer.
@@ -34,15 +36,22 @@ public final class TargetingBeam implements StrikeTask {
 			int points = Strikes.pointsOnRing(radius, 0.5);
 			for (int i = 0; i < points; i++) {
 				double angle = 2.0 * Math.PI * i / points;
-				level.sendParticles(this.dust, this.target.x + Math.cos(angle) * radius, this.target.y + 0.2,
-						this.target.z + Math.sin(angle) * radius, 1, 0.0, 0.0, 0.0, 0.0);
+				send(level, this.dust, this.target.x + Math.cos(angle) * radius, this.target.y + 0.2,
+						this.target.z + Math.sin(angle) * radius, 0.0, 0.0, 0.0);
 			}
 		}
 
 		if (this.age == this.duration - 1) {
-			level.sendParticles(ParticleTypes.FLASH, this.target.x, this.target.y + 1.0, this.target.z, 1, 0.0, 0.0, 0.0, 0.0);
+			send(level, ParticleTypes.FLASH, this.target.x, this.target.y + 1.0, this.target.z, 0.0, 0.0, 0.0);
 		}
 
 		return ++this.age >= this.duration;
+	}
+
+	/** Long-distance particles, so the beam can be seen from further away than the usual 32 blocks. */
+	private static void send(ServerLevel level, ParticleOptions particle, double x, double y, double z, double dx, double dy, double dz) {
+		for (ServerPlayer player : level.players()) {
+			level.sendParticles(player, particle, true, x, y, z, 1, dx, dy, dz, 0.0);
+		}
 	}
 }
