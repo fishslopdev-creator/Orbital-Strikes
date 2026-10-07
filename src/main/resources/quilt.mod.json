@@ -1,0 +1,40 @@
+{
+	"schema_version": 1,
+	"quilt_loader": {
+		"group": "dev.fishslop",
+		"id": "orbital_strikes",
+		"version": "${version}",
+		"metadata": {
+			"name": "Orbital Strikes",
+			"description": "Wemmbu-style orbital strike cannons: cast a rod, reel it in, and call down a Nuke, a Stab, a Wither barrage or a pack of dogs.",
+			"contributors": {
+				"fishslopdev": "Owner"
+			},
+			"contact": {
+				"sources": "https://github.com/fishslopdev-creator/Orbital-Strikes",
+				"issues": "https://github.com/fishslopdev-creator/Orbital-Strikes/issues"
+			},
+			"icon": "assets/orbital_strikes/icon.png"
+		},
+		"intermediate_mappings": "net.fabricmc:intermediary",
+		"entrypoints": {
+			"init": "dev.fishslop.orbitalstrikes.OrbitalStrikes",
+			"client_init": "dev.fishslop.orbitalstrikes.client.OrbitalStrikesClient"
+		},
+		"depends": [
+			{
+				"id": "quilt_loader",
+				"versions": ">=0.17.0-"
+			},
+			{
+				"id": "quilted_fabric_api",
+				"versions": ">=4.0.0-"
+			},
+			{
+				"id": "minecraft",
+				"versions": "=1.19.2"
+			}
+		]
+	},
+	"mixin": "orbital_strikes.mixins.json"
+}

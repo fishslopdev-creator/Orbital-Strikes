@@ -1,0 +1,13 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"T",
+		"T",
+		"R"
+	],
+	"key": {
+		"T": { "item": "minecraft:tnt" },
+		"R": { "item": "minecraft:fishing_rod" }
+	},
+	"result": { "item": "orbital_strikes:stab_cannon" }
+}

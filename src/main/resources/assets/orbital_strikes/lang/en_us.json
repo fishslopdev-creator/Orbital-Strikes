@@ -1,0 +1,20 @@
+{
+	"item.orbital_strikes.nuke_cannon": "Orbital Strike Cannon: Nuke",
+	"item.orbital_strikes.stab_cannon": "Orbital Strike Cannon: Stab",
+	"item.orbital_strikes.wither_cannon": "Orbital Wither Cannon",
+	"item.orbital_strikes.dog_cannon": "Orbital Dog Cannon",
+
+	"tooltip.orbital_strikes.nuke": "Rains rings of TNT down on the target",
+	"tooltip.orbital_strikes.stab": "Drills a TNT shaft straight down to bedrock",
+	"tooltip.orbital_strikes.wither": "Wither skull barrage, then summons a Wither",
+	"tooltip.orbital_strikes.dog": "Drops a pack of tamed wolves from orbit",
+	"tooltip.orbital_strikes.usage": "Cast, then reel in to fire at the bobber",
+
+	"strike.orbital_strikes.nuke": "NUKE",
+	"strike.orbital_strikes.stab": "STAB",
+	"strike.orbital_strikes.wither": "WITHER",
+	"strike.orbital_strikes.dog": "DOG",
+
+	"message.orbital_strikes.inbound": "Orbital %s inbound!",
+	"command.orbital_strikes.fired": "Orbital %s strike called in at %s, %s, %s"
+}

@@ -1,0 +1,13 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"BBB",
+		"BRB",
+		"BBB"
+	],
+	"key": {
+		"B": { "item": "minecraft:bone" },
+		"R": { "item": "minecraft:fishing_rod" }
+	},
+	"result": { "item": "orbital_strikes:dog_cannon" }
+}

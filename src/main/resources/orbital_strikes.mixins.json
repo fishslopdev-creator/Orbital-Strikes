@@ -1,0 +1,16 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "dev.fishslop.orbitalstrikes.mixin",
+	"compatibilityLevel": "JAVA_17",
+	"mixins": [
+		"FishingHookMixin"
+	],
+	"client": [
+		"client.FishingHookRendererMixin",
+		"client.ItemPropertiesAccessor"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
