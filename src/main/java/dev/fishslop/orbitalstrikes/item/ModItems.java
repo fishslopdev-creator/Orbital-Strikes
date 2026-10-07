@@ -1,6 +1,7 @@
 package dev.fishslop.orbitalstrikes.item;
 
 import dev.fishslop.orbitalstrikes.OrbitalStrikes;
+import dev.fishslop.orbitalstrikes.mace.MaceItem;
 import dev.fishslop.orbitalstrikes.strike.StrikeType;
 import java.util.EnumMap;
 import java.util.Map;
@@ -11,6 +12,8 @@ import net.minecraft.world.item.Rarity;
 
 public final class ModItems {
 	public static final Map<StrikeType, OrbitalCannonItem> CANNONS = new EnumMap<>(StrikeType.class);
+	public static final Item MACE = new MaceItem(new Item.Properties().durability(500).rarity(Rarity.EPIC).tab(CreativeModeTab.TAB_COMBAT));
+	public static final Item HEAVY_CORE = new Item(new Item.Properties().rarity(Rarity.EPIC).tab(CreativeModeTab.TAB_MATERIALS));
 
 	private ModItems() {
 	}
@@ -26,5 +29,8 @@ public final class ModItems {
 			Registry.register(Registry.ITEM, OrbitalStrikes.id(type.id() + "_cannon"), item);
 			CANNONS.put(type, item);
 		}
+
+		Registry.register(Registry.ITEM, OrbitalStrikes.id("mace"), MACE);
+		Registry.register(Registry.ITEM, OrbitalStrikes.id("heavy_core"), HEAVY_CORE);
 	}
 }

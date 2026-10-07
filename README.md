@@ -1,6 +1,6 @@
 # Orbital Strikes
 
-A **Quilt 1.19.2** mod that recreates Wemmbu's fishing-rod orbital strike cannon. Cast the rod, reel it back in,
+A **Quilt 1.19.2** mod with a backported 1.21 [Mace](#mace-backported-from-121) and a recreation of Wemmbu's fishing-rod orbital strike cannon. Cast the rod, reel it back in,
 and the strike comes down wherever the bobber was. A coloured targeting beam marks the spot for 1.5 seconds first.
 
 | Cannon | What it does |
@@ -23,6 +23,31 @@ and the strike comes down wherever the bobber was. A coloured targeting beam mar
 
 Reeling in sets a 2-second cooldown. The cannons have no durability. Range is the normal fishing-rod range (the bobber
 breaks at 32 blocks).
+
+## Mace (backported from 1.21)
+
+The mace and its enchantments, rebuilt for 1.19.2.
+
+* **Stats:** 6 attack damage, 0.6 attack speed, 500 durability. Repair it with blaze rods (breeze rods don't exist in 1.19.2).
+* **Smash attack:** hit something after falling more than 1.5 blocks. You get +4 damage per block for the first 3 blocks,
+  +2 per block for the next 5, and +1 per block after that. The smash cancels your fall damage. It also knocks back
+  every mob within 3.5 blocks of the target, and twice as hard if you fell more than 5 blocks. Smashes don't work while
+  gliding with an elytra.
+* **Enchantments:**
+  * **Density I–V:** +0.5 smash damage per block fallen, per level.
+  * **Breach I–IV:** each level makes the target's armor 15% less effective.
+  * **Wind Burst I–III:** a smash launches you back up into the air. Falling back down only hurts for the distance
+    below where you were launched, so you can chain smashes.
+  * The mace also takes Smite, Bane of Arthropods, Fire Aspect, Unbreaking and Mending. Density, Breach, Smite and
+    Bane of Arthropods can't be combined.
+  * Density and Breach come up at the enchanting table. Wind Burst is a treasure enchantment, so it only comes from
+    enchanted books (librarian trades or `/give`).
+* **Crafting:**
+  * Heavy Core: 8 iron blocks around a netherite ingot (1.19.2 has no trial chambers to find one in).
+  * Mace: Heavy Core on top of a blaze rod.
+* **Commands:** `/give @s orbital_strikes:mace`, `/enchant @s orbital_strikes:wind_burst 3`.
+
+1.19.2 has no mace sounds, so the smash borrows vanilla sounds (an anvil thud for heavy hits).
 
 ## Requirements
 

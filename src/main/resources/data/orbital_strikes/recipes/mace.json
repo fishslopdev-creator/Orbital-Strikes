@@ -1,0 +1,12 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"H",
+		"R"
+	],
+	"key": {
+		"H": { "item": "orbital_strikes:heavy_core" },
+		"R": { "item": "minecraft:blaze_rod" }
+	},
+	"result": { "item": "orbital_strikes:mace" }
+}

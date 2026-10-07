@@ -4,7 +4,11 @@
 	"package": "dev.fishslop.orbitalstrikes.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-		"FishingHookMixin"
+		"EnchantmentHelperMixin",
+		"EnchantmentMixin",
+		"FishingHookMixin",
+		"LivingEntityMixin",
+		"PlayerMixin"
 	],
 	"client": [
 		"client.FishingHookRendererMixin",

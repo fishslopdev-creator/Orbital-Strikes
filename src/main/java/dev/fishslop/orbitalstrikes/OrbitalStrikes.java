@@ -1,6 +1,8 @@
 package dev.fishslop.orbitalstrikes;
 
 import dev.fishslop.orbitalstrikes.item.ModItems;
+import dev.fishslop.orbitalstrikes.mace.MaceItem;
+import dev.fishslop.orbitalstrikes.mace.ModEnchantments;
 import dev.fishslop.orbitalstrikes.strike.StrikeScheduler;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -22,11 +24,16 @@ public class OrbitalStrikes implements ModInitializer {
 	@Override
 	public void onInitialize(ModContainer mod) {
 		ModItems.register();
+		ModEnchantments.register();
 
 		ServerTickEvents.END_WORLD_TICK.register(StrikeScheduler::tick);
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> StrikeScheduler.clear());
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			StrikeScheduler.clear();
+			MaceItem.clearWindBurstLaunches();
+		});
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> OrbitalStrikeCommand.register(dispatcher));
 
+		SmokeTest.registerIfEnabled();
 		LOGGER.info("Orbital strike cannons are online.");
 	}
 }

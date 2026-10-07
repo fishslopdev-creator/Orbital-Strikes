@@ -21,6 +21,16 @@ loom {
 	mixin {
 		defaultRefmapName = 'orbital_strikes.refmap.json'
 	}
+
+	runs {
+		// Used by CI: starts a dedicated server, fires every strike and checks all mixins apply (see SmokeTest).
+		smokeTest {
+			server()
+			name 'Smoke Test Server'
+			vmArg '-Dorbital_strikes.smokeTest=true'
+			runDir 'build/smoke-test'
+		}
+	}
 }
 
 dependencies {

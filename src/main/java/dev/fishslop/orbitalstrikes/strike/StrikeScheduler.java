@@ -13,6 +13,7 @@ import net.minecraft.server.level.ServerLevel;
  */
 public final class StrikeScheduler {
 	private static final Map<ServerLevel, List<Entry>> TASKS = new WeakHashMap<>();
+	private static int failures;
 
 	private StrikeScheduler() {
 	}
@@ -39,6 +40,7 @@ public final class StrikeScheduler {
 				done = entry.task.tick(level);
 			} catch (RuntimeException e) {
 				OrbitalStrikes.LOGGER.error("Orbital strike task failed, cancelling it", e);
+				failures++;
 				done = true;
 			}
 
@@ -46,6 +48,11 @@ public final class StrikeScheduler {
 				entries.remove(entry);
 			}
 		}
+	}
+
+	/** Number of tasks that have crashed since the game started. */
+	public static int failures() {
+		return failures;
 	}
 
 	public static void clear() {
