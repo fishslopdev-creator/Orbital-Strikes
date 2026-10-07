@@ -1,0 +1,14 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"SSS",
+		" R ",
+		" N "
+	],
+	"key": {
+		"S": { "item": "minecraft:wither_skeleton_skull" },
+		"R": { "item": "minecraft:fishing_rod" },
+		"N": { "item": "minecraft:nether_star" }
+	},
+	"result": { "item": "orbital_strikes:wither_cannon" }
+}

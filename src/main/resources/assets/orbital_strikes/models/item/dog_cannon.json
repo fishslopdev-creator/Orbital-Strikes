@@ -1,0 +1,14 @@
+{
+	"parent": "minecraft:item/handheld_rod",
+	"textures": {
+		"layer0": "orbital_strikes:item/dog_cannon"
+	},
+	"overrides": [
+		{
+			"predicate": {
+				"cast": 1
+			},
+			"model": "orbital_strikes:item/dog_cannon_cast"
+		}
+	]
+}
