@@ -6,14 +6,18 @@ Layout (outside to inside):
     staircase down to a dock at the front (south, +Z)
   * a 6-block-thick curtain wall with an arched inner gallery, battlements
     and 24 round towers topped with teal spires; two bigger towers flank
-    the main gate
-  * a grass courtyard with a ring path, radial avenues, fountain gardens,
-    lamp posts and a ring of smaller towers
+    the main gate, which has carved portals, a portcullis and a gabled
+    gatehouse with a rose window and balconies above it
+  * a grass courtyard with a ring path, radial avenues, fountain plazas
+    and gardens, lamp posts and a ring of smaller towers
+
+Everything is mirror-symmetric left/right (X), and front/back (Z) except the
+main gate at the front and the two tall towers at the back.
   * a three-tier stepped palace: terraces with turrets and pavilions, a
     cross-shaped keep with gabled teal roofs, four corner towers and a big
     central donjon
-  * two very tall towers at the back, joined to the curtain wall by arched
-    flying bridges
+  * two very tall towers at the back (part of the courtyard tower ring),
+    joined to the wall towers behind them by arched flying bridges
 
 The schematic origin is the centre of the island at courtyard ground level
 (the grass is at y=0). The dock at the foot of the front staircase is at
@@ -47,6 +51,10 @@ ROOF = "minecraft:waxed_oxidized_cut_copper"
 ROOF_EDGE = "minecraft:prismarine_bricks"
 ROOF_CAP = "minecraft:waxed_oxidized_cut_copper_slab[type=bottom,waterlogged=false]"
 SPIRE_TIP = "minecraft:end_rod[facing=up]"
+CHISELED = "minecraft:chiseled_quartz_block"
+BARS_EW = ("minecraft:iron_bars"
+           "[east=true,north=false,south=false,waterlogged=false,west=true]")
+HANGING_LANTERN = "minecraft:lantern[hanging=true,waterlogged=false]"
 GRASS = "minecraft:grass_block[snowy=false]"
 DIRT = "minecraft:dirt"
 WATER = "minecraft:water[level=0]"
@@ -78,12 +86,17 @@ WALL_TOWER_R = 97           # ring the wall towers sit on
 N_WALL_TOWERS = 24
 GATE_TOWER_IDS = (5, 6)     # the towers at 82.5 and 97.5 degrees flank the gate
 GATE_HALF_W = 4
+PLAZA_DIST = 84             # plazas on the ring path, north and south
+PLAZA_R = 8
 
 # (radius, y of the surface it stands on, height)
 TIERS = [(50, 0, 6), (38, 6, 6), (26, 12, 6)]
 
-TALL_TOWER_ANGLES = (240, 300)  # degrees; 270 is straight north (-Z)
-TALL_TOWER_DIST = 60
+MID_TOWER_DIST = 64         # ring of 8 smaller towers in the courtyard
+# Two of the courtyard ring towers (north-west and north-east; 270 degrees is
+# straight north, -Z) are replaced by very tall towers bridged to the wall
+# towers behind them.
+TALL_TOWER_ANGLES = (247.5, 292.5)
 TALL_TOWER_R = 7
 
 # Stairs climb towards the centre, so they face the centre.
@@ -153,19 +166,21 @@ def cone(b, cx, cz, y0, radius, height):
     b.set(cx, y0 + height + 2, cz, SPIRE_TIP)
 
 
-def tower(b, cx, cz, y0, r, h, roof_h, *, doors=(), floor_ys=(),
+def tower(b, cx, cz, y0, r, h, roof_h, *, face=90, doors=(), floor_ys=(),
           flare=True, belfry=False):
     """Round hollow tower with windows, floors and a conical roof.
 
+    face: angle (degrees) a window column is centred on; the window count is
+          a multiple of 4 so the pattern is mirror-symmetric about `face`.
     doors: (angle_deg, y_bottom, height) openings cut through the shell.
     """
     top = y0 + h
     inner = r - 1.3
-    n_win = max(4, round(r * 1.3))
+    n_win = 4 * max(1, round(r * 1.3 / 4))
     floors = set(range(y0, top, 7)) | set(floor_ys) | {top}
     for x, z, d in disc_points(cx, cz, r + 1.5):
-        ang = math.atan2(z - cz, x - cx)
-        wpos = (ang / (2 * math.pi) * n_win) % 1
+        ang = math.atan2(z - cz, x - cx) - math.radians(face)
+        wpos = (ang / (2 * math.pi) * n_win + 0.5) % 1
         arc_from_win = abs(wpos - 0.5) * 2 * math.pi * r / n_win
         is_win = arc_from_win < 0.6
         is_pilaster = r >= 5 and (wpos < 0.07 or wpos > 0.93)
@@ -209,7 +224,12 @@ def balcony(b, cx, cz, y, r):
 
 
 def _walls(put, a0, a1, c0, c1, y0, wall_h):
-    """Rectangular hollow walls in (along, across) coordinates."""
+    """Rectangular hollow walls in (along, across) coordinates.
+
+    Pilasters and windows are spaced out from the middle of each wall so both
+    halves match; a0 + a1 and c0 + c1 must be even.
+    """
+    a_mid, c_mid = (a0 + a1) // 2, (c0 + c1) // 2
     for a in range(a0, a1 + 1):
         for c in range(c0, c1 + 1):
             put(a, y0, c, WHITE)
@@ -222,7 +242,7 @@ def _walls(put, a0, a1, c0, c1, y0, wall_h):
                 elif y == y0 + wall_h:
                     put(a, y, c, TRIM)
                 else:
-                    k = (a - a0) % 4 if on_c else (c - c0) % 4
+                    k = abs(a - a_mid) % 4 if on_c else abs(c - c_mid) % 4
                     if k == 2 and y0 + 3 <= y <= y0 + wall_h - 3:
                         put(a, y, c, GLASS)
                     elif k == 0:
@@ -348,7 +368,10 @@ def foundation(b):
         for x in (-7, 7):
             for yy in range(FOUND_BOTTOM, y + 2):
                 b.set(x, yy, z, BRICK)
-            b.set(x, y + 2, z, SLAB)
+            if k % 4 == 1:
+                lamp_post(b, x, y + 1, z)
+            else:
+                b.set(x, y + 2, z, SLAB)
 
     dock_y = -steps - 1
     z_start = R_ISLAND + steps + 1
@@ -366,8 +389,11 @@ def foundation(b):
 
 
 def curtain_wall(b):
-    n_bays = round(2 * math.pi * R_IN / 8)
-    n_merlons = 2 * round(2 * math.pi * R_OUT / 4)
+    # Whole numbers of bays and merlons per tower-to-tower segment, with a
+    # pillar/merlon centred on angle 0, keep the ring mirror-symmetric and
+    # put an arch (hidden by the tower) behind every tower.
+    n_bays = 3 * N_WALL_TOWERS
+    n_merlons = 14 * N_WALL_TOWERS
     for x, z, d in disc_points(0, 0, R_OUT + 1):
         if d < R_IN - 0.5:
             continue
@@ -379,13 +405,13 @@ def curtain_wall(b):
             continue
 
         t = d - R_IN                     # -0.5 (inner face) .. 6.5 (outer face)
-        u = (frac * n_bays % 1) * 8      # position inside an 8-block bay
-        arch_top = 7 + math.sqrt(max(0.0, 9 - (u - 5) ** 2))
+        u = (frac * n_bays % 1) * 8      # 0..8 across a bay, pillar at 0/8
+        arch_top = 7 + math.sqrt(max(0.0, 9 - (u - 4) ** 2))
         for y in range(1, WALL_H + 1):
             if y == WALL_H:
                 blk = WHITE
             elif t < 1.5:                # arcade facing the courtyard
-                if u < 2:
+                if u < 1 or u > 7:
                     blk = PILLAR if y <= 7 else BRICK
                 elif y <= arch_top:
                     blk = None
@@ -404,7 +430,7 @@ def curtain_wall(b):
 
         if t >= 5.5:
             b.set(x, WALL_H + 1, z, BRICK)
-            if int(frac * n_merlons) % 2 == 0:
+            if math.floor(frac * n_merlons + 0.5) % 2 == 0:
                 b.set(x, WALL_H + 2, z, BRICK)
         elif t < 0.5:
             b.set(x, WALL_H + 1, z, SLAB)
@@ -421,13 +447,19 @@ def wall_towers(b):
             (ang + 90, 1, 4), (ang - 90, 1, 4),            # gallery
             (ang + 90, WALL_H + 1, 3), (ang - 90, WALL_H + 1, 3),  # wall walk
         ]
-        tower(b, cx, cz, 1, r, h, roof_h, doors=doors,
+        if ang in TALL_TOWER_ANGLES:
+            doors.append((ang + 180, WALL_H + 1, 3))      # bridge landing
+        tower(b, cx, cz, 1, r, h, roof_h, face=ang, doors=doors,
               floor_ys=(WALL_H,), flare=False)
+
+
+def gate_arch_top(x):
+    return 7 + math.sqrt(20.25 - x * x)
 
 
 def gate(b):
     for x in range(-GATE_HALF_W, GATE_HALF_W + 1):
-        top = 7 + math.sqrt(20.25 - x * x)
+        top = gate_arch_top(x)
         for z in range(R_IN - 3, R_ISLAND):
             d = math.hypot(x, z)
             if not (R_IN - 1 <= d <= R_OUT + 1.6):
@@ -440,6 +472,93 @@ def gate(b):
             b.set(x, 0, z, PATH)
 
 
+def entrance(b):
+    """Gatehouse over the main gate with carved portals, portcullis and lights."""
+    z_in, z_out = R_IN - 2, R_OUT + 2       # gatehouse spans z_in..z_out
+
+    # Portal frames projecting two blocks from both faces of the wall:
+    # quartz-pillar piers, a diorite arch ring and a chiseled keystone.
+    for z in (z_in, z_in + 1, z_out - 1, z_out):
+        for x in range(-GATE_HALF_W - 2, GATE_HALF_W + 3):
+            b.set(x, 0, z, PATH)
+            for y in range(1, WALL_H):
+                if abs(x) > GATE_HALF_W:
+                    b.set(x, y, z, PILLAR)
+                elif y <= gate_arch_top(x):
+                    b.clear(x, y, z)
+                elif y <= gate_arch_top(x) + 1:
+                    b.set(x, y, z, CHISELED if x == 0 else TRIM)
+                else:
+                    b.set(x, y, z, BRICK)
+        for x in (-GATE_HALF_W - 2, GATE_HALF_W + 2):
+            b.set(x, WALL_H, z, TRIM)
+
+    # pinnacles on the outer piers
+    for z in (z_in, z_out):
+        for x in (-GATE_HALF_W - 2, GATE_HALF_W + 2):
+            for y in range(WALL_H, WALL_H + 3):
+                b.set(x, y, z, PILLAR)
+            b.set(x, WALL_H + 3, z, ROOF)
+            b.set(x, WALL_H + 4, z, SPIRE_TIP)
+
+    # gatehouse hall on top of the gate, open to the gate towers' wall-walk doors
+    half = GATE_HALF_W + 1
+    hall(b, -half, half, z_in, z_out, WALL_H, 8, axis="z")
+    for x in (-half, half):
+        for z in range(WALL_TOWER_R - 2, WALL_TOWER_R + 2):
+            for y in range(WALL_H + 1, WALL_H + 4):
+                b.clear(x, y, z)
+
+    # rose windows in both gables
+    rose_y = WALL_H + 8 + 3
+    for z in (z_in, z_out):
+        for x in range(-2, 3):
+            for y in range(rose_y - 2, rose_y + 3):
+                if b.blocks.get((x, y, z)) != BRICK:
+                    continue
+                dd = x * x + (y - rose_y) ** 2
+                if dd <= 2:
+                    b.set(x, y, z, GLASS)
+                elif dd <= 5:
+                    b.set(x, y, z, CHISELED)
+
+    # balconies in front of both gable doors, on upside-down stair corbels
+    for z_edge, step, corbel_facing in ((z_out, 1, "north"), (z_in, -1, "south")):
+        for i in (1, 2):
+            z = z_edge + step * i
+            for x in range(-3, 4):
+                b.set(x, WALL_H, z, WHITE)
+                if abs(x) == 3 or i == 2:
+                    b.set(x, WALL_H + 1, z, SLAB)
+                if i == 1:
+                    b.set(x, WALL_H - 1, z,
+                          "minecraft:quartz_stairs[facing=" + corbel_facing +
+                          ",half=top,shape=straight,waterlogged=false]")
+        b.set(0, WALL_H - 1, z_edge + step * 2, HANGING_LANTERN)
+
+    # raised portcullis and lanterns along the gate passage
+    for x in range(-GATE_HALF_W, GATE_HALF_W + 1):
+        top = math.floor(gate_arch_top(x))
+        for y in (top - 1, top):
+            b.set(x, y, WALL_TOWER_R + 1, BARS_EW)
+    for z in (z_in, WALL_TOWER_R - 2, z_out - 1):
+        b.set(0, math.floor(gate_arch_top(0)), z, HANGING_LANTERN)
+
+    # paved approach across the ledge, lamp posts and obelisks at the stairs
+    for z in range(z_out + 1, R_ISLAND + 1):
+        for x in range(-GATE_HALF_W - 1, GATE_HALF_W + 2):
+            b.set(x, 0, z, TRIM if abs(x) > GATE_HALF_W else PATH)
+    for x in (-9, 9):
+        lamp_post(b, x, 0, z_out + 1, height=3)
+    for x in (-7, 7):
+        b.set(x, 1, R_ISLAND, BRICK)
+        for y in range(2, 5):
+            b.set(x, y, R_ISLAND, PILLAR)
+        b.set(x, 5, R_ISLAND, CHISELED)
+        b.set(x, 6, R_ISLAND, ROOF)
+        b.set(x, 7, R_ISLAND, SPIRE_TIP)
+
+
 def grounds(b):
     r_tier1 = TIERS[0][0]
     avenues = [math.radians(a) for a in range(0, 360, 45)]
@@ -450,7 +569,8 @@ def grounds(b):
         for a in avenues:
             along = x * math.cos(a) + z * math.sin(a)
             perp = abs(-x * math.sin(a) + z * math.cos(a))
-            half_w = 3.5 if abs(a - math.pi / 2) < 1e-6 else 1.5
+            north_south = abs(math.sin(a)) > 0.99
+            half_w = 3.5 if north_south else 1.5
             if along > 0 and perp <= half_w:
                 on_path = True
         if on_path:
@@ -474,28 +594,63 @@ def grounds(b):
         b.set(cx, 1, cz, PILLAR)
         b.set(cx, 2, cz, LANTERN)
 
-    # lamp posts inside the ring path
+    # lamp posts inside the ring path (none inside the plazas)
     for k in range(48):
         x, z = polar(3.75 + 7.5 * k, 84)
-        b.set(x, 1, z, PILLAR)
-        b.set(x, 2, z, PILLAR)
-        b.set(x, 3, z, LANTERN)
+        if abs(x) < PLAZA_R + 2:
+            continue
+        lamp_post(b, x, 0, z)
+
+    # plazas where the north and south avenues cross the ring path
+    for sz in (1, -1):
+        plaza(b, 0, PLAZA_DIST * sz)
 
     # ring of smaller towers (two are replaced by the tall towers)
     for k in range(8):
         ang = 22.5 + 45 * k
-        if any(angle_diff(math.radians(ang), math.radians(t)) < math.radians(20)
-               for t in TALL_TOWER_ANGLES):
+        if ang in TALL_TOWER_ANGLES:
             continue
-        cx, cz = polar(ang, 64)
-        tower(b, cx, cz, 1, 4, 18, 11, doors=[(ang + 180, 1, 4)])
+        cx, cz = polar(ang, MID_TOWER_DIST)
+        tower(b, cx, cz, 1, 4, 18, 11, face=ang, doors=[(ang + 180, 1, 4)])
+
+
+def lamp_post(b, x, y, z, height=2):
+    for i in range(1, height + 1):
+        b.set(x, y + i, z, PILLAR)
+    b.set(x, y + height + 1, z, LANTERN)
+
+
+def plaza(b, cx, cz):
+    """Round paved plaza with a fountain, an obelisk and four lamp posts."""
+    for x, z, d in disc_points(cx, cz, PLAZA_R):
+        for y in range(1, 5):
+            b.clear(x, y, z)
+        if d > PLAZA_R - 0.5 or 4.5 < d <= 5.5:
+            b.set(x, 0, z, TRIM)
+        elif d <= 2.5:
+            b.set(x, 0, z, WATER)
+        elif d <= 3.5:
+            b.set(x, 0, z, WHITE)
+            b.set(x, 1, z, SLAB)
+        else:
+            b.set(x, 0, z, PATH)
+    b.set(cx, 0, cz, WHITE)
+    for y in range(1, 4):
+        b.set(cx, y, cz, PILLAR)
+    b.set(cx, 4, cz, CHISELED)
+    b.set(cx, 5, cz, LANTERN)
+    for dx in (-5, 5):
+        for dz in (-5, 5):
+            lamp_post(b, cx + dx, 0, cz + dz)
 
 
 def terrace(b, radius, yb, h, lawn_inner=None):
-    n_pil = round(2 * math.pi * radius / 6)
+    n_pil = 8 * round(2 * math.pi * radius / 48)   # ~6 apart, 8-fold symmetric
+    pil_gap = 2 * math.pi * radius / n_pil
     top = yb + h
     for x, z, d in disc_points(0, 0, radius):
-        frac = (math.atan2(z, x) / (2 * math.pi)) % 1
+        s = (math.atan2(z, x) / (2 * math.pi)) % 1 * n_pil
+        is_pilaster = abs(s - round(s)) * pil_gap < 0.7
         for y in range(yb + 1, top + 1):
             if y == top:
                 if d > radius - 0.5:
@@ -505,7 +660,7 @@ def terrace(b, radius, yb, h, lawn_inner=None):
                 else:
                     blk = WHITE
             elif d > radius - 1.5:
-                blk = PILLAR if (frac * n_pil) % 1 < 0.2 else BRICK
+                blk = PILLAR if is_pilaster else BRICK
             else:
                 blk = CORE
             b.set(x, y, z, blk)
@@ -535,7 +690,10 @@ def terrace_stairs(b, radius, yb, h, angle_deg, facing, half_w):
             else:
                 for y in range(yb + 1, yb + k + 1):
                     b.set(x, y, z, BRICK)
-                b.set(x, yb + k + 1, z, SLAB)
+                if k == 1:   # lantern posts at the foot of the stairs
+                    lamp_post(b, x, yb + 1, z, height=1)
+                else:
+                    b.set(x, yb + k + 1, z, SLAB)
 
 
 def palace(b):
@@ -544,14 +702,15 @@ def palace(b):
         terrace(b, radius, yb, h, lawn_inner=inner)
     for radius, yb, h in TIERS:
         for ang, facing in CARDINALS:
-            terrace_stairs(b, radius, yb, h, ang, facing, 4 if ang == 90 else 2)
+            terrace_stairs(b, radius, yb, h, ang, facing,
+                           4 if ang in (90, 270) else 2)
 
     # tier 1: turrets between the staircases
     y1 = TIERS[0][1] + TIERS[0][2]
     for k in range(8):
         ang = 22.5 + 45 * k
         cx, cz = polar(ang, 45)
-        tower(b, cx, cz, y1, 3, 10, 8, doors=[(ang + 180, y1 + 1, 3)])
+        tower(b, cx, cz, y1, 3, 10, 8, face=ang, doors=[(ang + 180, y1 + 1, 3)])
 
     # tier 2: pavilions on the diagonals
     y2 = TIERS[1][1] + TIERS[1][2]
@@ -565,24 +724,28 @@ def palace(b):
     hall(b, -7, 7, -20, 20, y3, 16, axis="z")
     for sx in (-1, 1):
         for sz in (-1, 1):
-            tower(b, 14 * sx, 14 * sz, y3, 4, 26, 13)
+            tower(b, 14 * sx, 14 * sz, y3, 4, 26, 13,
+                  face=math.degrees(math.atan2(sz, sx)))
     tower(b, 0, 0, y3, 10, 48, 28, belfry=True)
 
 
 def tall_towers(b):
     r = TALL_TOWER_R
     for ang in TALL_TOWER_ANGLES:
-        cx, cz = polar(ang, TALL_TOWER_DIST)
+        cx, cz = polar(ang, MID_TOWER_DIST)
         doors = [(ang + 180, 1, 4), (ang, WALL_H + 1, 3)]
         for by in (36, 66):
             doors += [(ang + d, by + 1, 3) for d in (0, 90, 180, 270)]
             balcony(b, cx, cz, by, r)
-        tower(b, cx, cz, 1, r, 96, 28, doors=doors,
+        tower(b, cx, cz, 1, r, 96, 28, face=ang, doors=doors,
               floor_ys=(WALL_H, 36, 66), belfry=True)
-        bridge(b, ang, TALL_TOWER_DIST + r - 1, R_IN + 1)
+        # land on the wall tower behind; spring high there to keep its
+        # courtyard door clear
+        bridge(b, ang, MID_TOWER_DIST + r - 1, WALL_TOWER_R - 6,
+               end_spring=WALL_H - 5)
 
 
-def bridge(b, angle_deg, start, end):
+def bridge(b, angle_deg, start, end, end_spring=1):
     """Arched bridge along a ray from the centre, deck level with the wall walk."""
     a = math.radians(angle_deg)
     ca, sa = math.cos(a), math.sin(a)
@@ -591,12 +754,14 @@ def bridge(b, angle_deg, start, end):
     zs = [start * sa, end * sa]
     for x in range(int(min(xs)) - 4, int(max(xs)) + 5):
         for z in range(int(min(zs)) - 4, int(max(zs)) + 5):
-            along = x * ca + z * sa
-            perp = abs(-x * sa + z * ca)
+            along = round(x * ca + z * sa, 6)
+            perp = round(abs(-x * sa + z * ca), 6)
             if not (start <= along <= end) or perp > 2.2:
                 continue
-            u = 2 * (along - start) / span - 1
-            underside = 1 + (WALL_H - 3) * math.sqrt(max(0.0, 1 - u * u))
+            t = (along - start) / span
+            u = 2 * t - 1
+            spring = 1 + (end_spring - 1) * t
+            underside = spring + (WALL_H - 3 - spring) * math.sqrt(max(0.0, 1 - u * u))
             for y in range(math.ceil(underside), WALL_H):
                 b.set(x, y, z, BRICK if perp > 1.2 else WHITE)
             b.set(x, math.ceil(underside), z, TRIM)
@@ -614,6 +779,7 @@ def build_castle():
     wall_towers(b)
     gate(b)
     grounds(b)
+    entrance(b)
     palace(b)
     tall_towers(b)
     return b
